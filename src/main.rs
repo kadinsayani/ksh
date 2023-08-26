@@ -1,20 +1,17 @@
 use std::{
     io::{self, Write},
-    process::Command,
+    process::{Command, Output},
 };
 
 fn main() {
-    let mut command_processors: HashMap<&str, Box<dyn Fn(&str) -> io::Result<String>>> =
-        HashMap::new();
-    command_processors.insert("cd", Box::new(|_args| Ok(format!("cd"))));
-
     loop {
         print!("> ");
         io::stdout().flush().expect("Failed to flush stdout");
         let input = read_input().expect("Failed to read input");
-        let args: Vec<&str> = input.split(' ').collect();
+        let mut args: Vec<&str> = input.split(' ').collect();
         let command = args[0];
-        let result = execute_system_command(&command, &args).expect("Failed to execute");
+        args.remove(0);
+        let result = execute_system_command(&command, &args);
         println!("{}", result);
     }
 }
@@ -25,6 +22,21 @@ fn read_input() -> io::Result<String> {
     Ok(buffer.trim().to_string())
 }
 
-fn execute_system_command(command: &str, args: &Vec<&str>) -> io::Result<String> {
-    Ok(("placeholder".to_string()))
+fn execute_system_command(command: &str, args: &Vec<&str>) -> String {
+    let output: Output;
+    match command {
+        "cd" => "cd".to_string(),
+        command => {
+            let output = Command::new(command)
+                .args(args)
+                .output()
+                .expect("Failed to execute command");
+
+            if output.status.success() {
+                String::from_utf8_lossy(&output.stdout).to_string()
+            } else {
+                String::from_utf8_lossy(&output.stderr).to_string()
+            }
+        }
+    }
 }
