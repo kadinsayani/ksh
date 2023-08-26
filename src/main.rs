@@ -1,6 +1,8 @@
 use std::{
+    env,
     io::{self, Write},
-    process::{Command, Output},
+    path::Path,
+    process::Command,
 };
 
 fn main() {
@@ -23,9 +25,12 @@ fn read_input() -> io::Result<String> {
 }
 
 fn execute_system_command(command: &str, args: &Vec<&str>) -> String {
-    let output: Output;
     match command {
-        "cd" => "cd".to_string(),
+        "cd" => {
+            let path = Path::new(args[0]);
+            env::set_current_dir(&path);
+            "\n".to_string()
+        }
         command => {
             let output = Command::new(command)
                 .args(args)
