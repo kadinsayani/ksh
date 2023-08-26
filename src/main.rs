@@ -13,7 +13,9 @@ fn main() {
         print!("> ");
         io::stdout().flush().expect("Failed to flush stdout");
         let input = read_input().expect("Failed to read input");
-        let result = execute(&input, &command_processors).expect("Failed to execute");
+        let args: Vec<&str> = input.split(' ').collect();
+        let command = args[0];
+        let result = execute_system_command(&command, &args).expect("Failed to execute");
         println!("{}", result);
     }
 }
@@ -24,15 +26,6 @@ fn read_input() -> io::Result<String> {
     Ok(buffer.trim().to_string())
 }
 
-type CommandProcessor = Box<dyn Fn(&str) -> io::Result<String>>;
-
-fn execute(
-    input: &str,
-    command_processors: &HashMap<&str, CommandProcessor>,
-) -> io::Result<String> {
-    if let Some(processor) = command_processors.get(input) {
-        processor(input)
-    } else {
-        Ok(format!("Unknown command: {}", input))
-    }
+fn execute_system_command(command: &str, args: &Vec<&str>) -> io::Result<String> {
+    Ok(("placeholder".to_string()))
 }
