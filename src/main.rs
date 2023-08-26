@@ -28,8 +28,10 @@ fn execute_system_command(command: &str, args: &Vec<&str>) -> String {
     match command {
         "cd" => {
             let path = Path::new(args[0]);
-            env::set_current_dir(&path);
-            "\n".to_string()
+            match env::set_current_dir(&path) {
+                Ok(()) => '\n'.to_string(),
+                Err(err) => format!("Error: {}", err),
+            }
         }
         command => {
             let output = Command::new(command)
