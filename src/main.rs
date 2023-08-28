@@ -1,4 +1,5 @@
 use atty::Stream;
+use colored::Colorize;
 use shell_words;
 use std::{
     env,
@@ -7,11 +8,12 @@ use std::{
     path::Path,
     process::Command,
 };
+use whoami::username;
 
 fn main() {
     if atty::is(Stream::Stdout) {
         loop {
-            print!("> ");
+            print!("{} {}", username(), "> ".red());
             io::stdout().flush().expect("Failed to flush stdout");
             let input = match read_input() {
                 Ok(input) => input,
