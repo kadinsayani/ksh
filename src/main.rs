@@ -1,5 +1,7 @@
+use shell_words;
 use std::{
     env,
+    error::Error,
     io::{self, Write},
     path::Path,
     process::Command,
@@ -9,12 +11,26 @@ fn main() {
     loop {
         print!("> ");
         io::stdout().flush().expect("Failed to flush stdout");
-        let input = read_input().expect("Failed to read input");
-        let mut args: Vec<&str> = input.split(' ').collect();
-        let command = args[0];
-        args.remove(0);
-        let result = execute_system_command(&command, &args);
-        println!("{}", result);
+        let input = match read_input() {
+            Ok(input) => input,
+            Err(err) => {
+                eprintln!("{}", err);
+                continue;
+            }
+        };
+        let tokens = match shell_words::split(&input) {
+            Ok(tokens) => tokens,
+            Err(err) => {
+                eprintln!("{}", err);
+                continue;
+            }
+        };
+        let command = &tokens[0];
+        let args = &tokens[1..];
+        match execute_system_command(&command, &args) {
+            Ok(result) => println!("{}", result),
+            Err(err) => eprintln!("{:?}", err),
+        }
     }
 }
 
@@ -24,13 +40,13 @@ fn read_input() -> io::Result<String> {
     Ok(buffer.trim().to_string())
 }
 
-fn execute_system_command(command: &str, args: &Vec<&str>) -> String {
+fn execute_system_command(command: &str, args: &[String]) -> Result<String, Box<dyn Error>> {
     match command {
         "cd" => {
-            let path = Path::new(args[0]);
+            let path = Path::new(&args[0]);
             match env::set_current_dir(&path) {
-                Ok(()) => '\n'.to_string(),
-                Err(err) => format!("Error: {}", err),
+                Ok(()) => Ok('\n'.to_string()),
+                Err(err) => Err(format!("Error: {}", err).into()),
             }
         }
         command => {
@@ -40,9 +56,9 @@ fn execute_system_command(command: &str, args: &Vec<&str>) -> String {
                 .expect("Failed to execute command");
 
             if output.status.success() {
-                String::from_utf8_lossy(&output.stdout).to_string()
+                Ok(String::from_utf8_lossy(&output.stdout).to_string())
             } else {
-                String::from_utf8_lossy(&output.stderr).to_string()
+                Ok(String::from_utf8_lossy(&output.stderr).to_string())
             }
         }
     }
