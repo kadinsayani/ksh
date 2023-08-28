@@ -1,3 +1,4 @@
+use atty::Stream;
 use shell_words;
 use std::{
     env,
@@ -8,28 +9,30 @@ use std::{
 };
 
 fn main() {
-    loop {
-        print!("> ");
-        io::stdout().flush().expect("Failed to flush stdout");
-        let input = match read_input() {
-            Ok(input) => input,
-            Err(err) => {
-                eprintln!("{}", err);
-                continue;
+    if atty::is(Stream::Stdout) {
+        loop {
+            print!("> ");
+            io::stdout().flush().expect("Failed to flush stdout");
+            let input = match read_input() {
+                Ok(input) => input,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    continue;
+                }
+            };
+            let tokens = match shell_words::split(&input) {
+                Ok(tokens) => tokens,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    continue;
+                }
+            };
+            let command = &tokens[0];
+            let args = &tokens[1..];
+            match execute_system_command(&command, &args) {
+                Ok(result) => println!("{}", result),
+                Err(err) => eprintln!("{:?}", err),
             }
-        };
-        let tokens = match shell_words::split(&input) {
-            Ok(tokens) => tokens,
-            Err(err) => {
-                eprintln!("{}", err);
-                continue;
-            }
-        };
-        let command = &tokens[0];
-        let args = &tokens[1..];
-        match execute_system_command(&command, &args) {
-            Ok(result) => println!("{}", result),
-            Err(err) => eprintln!("{:?}", err),
         }
     }
 }
