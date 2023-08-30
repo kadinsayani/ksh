@@ -1,19 +1,35 @@
 use atty::Stream;
 use colored::Colorize;
+use dirs;
+use serde_derive::Deserialize;
 use shell_words;
 use std::{
     env,
     error::Error,
+    fs,
     io::{self, Write},
     path::Path,
     process::Command,
 };
 use whoami::username;
+#[derive(Deserialize)]
+struct Data {
+    config: Config,
+}
+#[derive(Deserialize)]
+struct Config {
+    prompt: String,
+    prompt_color: String,
+}
 
+// TODO: documentation
 fn main() {
     if atty::is(Stream::Stdout) {
+        let data = load_config();
+        let prompt = data.config.prompt;
+        let prompt_color = data.config.prompt_color;
         loop {
-            print!("{} {}", username(), "> ".red());
+            print!("{} {} ", username(), prompt.color(prompt_color.as_str()));
             io::stdout().flush().expect("Failed to flush stdout");
             let input = match read_input() {
                 Ok(input) => input,
@@ -67,4 +83,25 @@ fn execute_system_command(command: &str, args: &[String]) -> Result<String, Box<
             }
         }
     }
+}
+
+fn load_config() -> Data {
+    let home_dir = dirs::home_dir().expect("Failed to determine home directory");
+    let config_path = home_dir.join(".ksh.toml");
+    // TODO: update path to .ksh.toml in home_dir
+    let contents = match fs::read_to_string("./.ksh.toml") {
+        Ok(contents) => contents,
+        Err(err) => {
+            panic!("Unable to load .ksh.toml: {}", err)
+        }
+    };
+
+    let data: Data = match toml::from_str(&contents) {
+        Ok(config) => config,
+        Err(err) => {
+            panic!("Unable to read .ksh.toml: {}", err)
+        }
+    };
+
+    data
 }

@@ -1,0 +1,5 @@
+# Example .ksh.toml
+
+[config]
+prompt = ">"
+prompt_color = "red"
