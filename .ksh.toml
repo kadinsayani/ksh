@@ -3,3 +3,4 @@
 [config]
 prompt = ">"
 prompt_color = "red"
+wd_color = "blue"

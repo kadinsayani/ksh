@@ -20,6 +20,7 @@ struct Data {
 struct Config {
     prompt: String,
     prompt_color: String,
+    wd_color: String,
 }
 
 // TODO: documentation
@@ -28,7 +29,15 @@ fn main() {
         let data = load_config();
         let prompt = data.config.prompt;
         let prompt_color = data.config.prompt_color;
+        let wd_color = data.config.wd_color;
         loop {
+            // TODO: git integration
+            // TODO: autocomplete
+            let wd = match env::current_dir() {
+                Ok(wd) => wd,
+                Err(_) => panic!("Cannot determine current directory"),
+            };
+            println!("{}", wd.display().to_string().color(wd_color.as_str()));
             print!("{} {} ", username(), prompt.color(prompt_color.as_str()));
             io::stdout().flush().expect("Failed to flush stdout");
             let input = match read_input() {
