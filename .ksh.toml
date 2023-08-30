@@ -1,6 +1,13 @@
 # Example .ksh.toml
 
 [config]
-prompt = ">"
-prompt_color = "red"
+prompt_msg = ""
+prompt_msg_color = ""
+prompt_symbol = ">"
+prompt_symbol_color = "green"
+prompt_username = "false"
+shell_name = "true"
+execute_time = "true"
+execute_time_color = "true"
+git_integration = "true"
 wd_color = "blue"

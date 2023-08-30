@@ -18,27 +18,62 @@ struct Data {
 }
 #[derive(Deserialize)]
 struct Config {
-    prompt: String,
-    prompt_color: String,
+    prompt_msg: String,
+    prompt_msg_color: String,
+    prompt_symbol: String,
+    prompt_symbol_color: String,
+    prompt_username: String,
+    shell_name: String,
+    execute_time: String,
+    execute_time_color: String,
+    git_integration: String,
     wd_color: String,
 }
 
-// TODO: documentation
+// TODO: documentation and cleanup
 fn main() {
     if atty::is(Stream::Stdout) {
         let data = load_config();
-        let prompt = data.config.prompt;
-        let prompt_color = data.config.prompt_color;
+        let prompt_msg = data.config.prompt_msg;
+        let prompt_msg_color = data.config.prompt_msg_color;
+        let prompt_symbol = data.config.prompt_symbol;
+        let prompt_symbol_color = data.config.prompt_symbol_color;
+        let prompt_username = parse_bool_config(&data.config.prompt_username);
+        let shell_name = parse_bool_config(&data.config.shell_name);
+        let execute_time = parse_bool_config(&data.config.execute_time);
+        let execute_time_color = data.config.execute_time_color;
+        let git_integration = parse_bool_config(&data.config.git_integration);
         let wd_color = data.config.wd_color;
         loop {
             // TODO: git integration
             // TODO: autocomplete
+            // TODO: display username true/false
             let wd = match env::current_dir() {
                 Ok(wd) => wd,
                 Err(_) => panic!("Cannot determine current directory"),
             };
             println!("{}", wd.display().to_string().color(wd_color.as_str()));
-            print!("{} {} ", username(), prompt.color(prompt_color.as_str()));
+            let mut prompt: String = prompt_msg.clone();
+            if !prompt_msg.is_empty() && shell_name {
+                prompt.push_str(" | ");
+            }
+            if !prompt_msg.is_empty() && prompt_username {
+                prompt.push_str(" | ");
+            }
+            if shell_name {
+                prompt.push_str("ksh");
+            }
+            if shell_name && prompt_username {
+                prompt.push_str(" | ");
+            }
+            if prompt_username {
+                prompt.push_str(username().as_str());
+            };
+            print!(
+                "{} {} ",
+                prompt.color(prompt_msg_color.as_str()),
+                prompt_symbol.color(prompt_symbol_color.as_str())
+            );
             io::stdout().flush().expect("Failed to flush stdout");
             let input = match read_input() {
                 Ok(input) => input,
@@ -113,4 +148,12 @@ fn load_config() -> Data {
     };
 
     data
+}
+
+fn parse_bool_config(value: &str) -> bool {
+    match value {
+        "true" => true,
+        "false" => false,
+        _ => true,
+    }
 }
