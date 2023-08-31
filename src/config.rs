@@ -18,7 +18,7 @@ pub struct Config {
     pub execute_time_color: String,
     pub git_integration: String,
     pub git_integration_color: String,
-    pub wd_color: String,
+    pub cwd_color: String,
 }
 
 pub fn load_config() -> Data {

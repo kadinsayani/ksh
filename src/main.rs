@@ -15,6 +15,7 @@ use whoami::username;
 // TODO: documentation and cleanup
 fn main() {
     if atty::is(Stream::Stdout) {
+        // init
         let data = config::load_config();
         let prompt_msg = data.config.prompt_msg;
         let prompt_msg_color = data.config.prompt_msg_color;
@@ -25,9 +26,10 @@ fn main() {
         // TODO
         let execute_time = config::parse_bool_config(&data.config.execute_time);
         let execute_time_color = data.config.execute_time_color;
-        // TODO
         let git_integration = config::parse_bool_config(&data.config.git_integration);
         let git_integration_color = data.config.git_integration_color;
+
+        // git integration
         let mut git_branch: String = String::from("");
         if git_integration {
             // get current git branch
@@ -43,15 +45,23 @@ fn main() {
                 git_branch = String::from_utf8_lossy(&output.stdout).to_string()
             }
         }
-        let wd_color = data.config.wd_color;
+
+        // set current working directory color
+        let cwd_color = data.config.cwd_color;
+
+        // shell loop
         loop {
             // TODO: autocomplete
-            let wd = match env::current_dir() {
-                Ok(wd) => wd,
+
+            // cwd
+            let cwd = match env::current_dir() {
+                Ok(cwd) => cwd,
                 Err(_) => panic!("Cannot determine current directory"),
             };
-            print!("{}", wd.display().to_string().color(wd_color.as_str()));
+            print!("{}", cwd.display().to_string().color(cwd_color.as_str()));
             println!(" {}", git_branch.color(git_integration_color.as_str()));
+
+            // construct prompt
             let mut prompt: String = prompt_msg.clone();
             if !prompt_msg.is_empty() && shell_name {
                 prompt.push_str(" | ");
@@ -74,6 +84,8 @@ fn main() {
                 prompt_symbol.color(prompt_symbol_color.as_str())
             );
             io::stdout().flush().expect("Failed to flush stdout");
+
+            // command from stdin
             let input = match read_input() {
                 Ok(input) => input,
                 Err(err) => {
@@ -90,6 +102,8 @@ fn main() {
             };
             let command = &tokens[0];
             let args = &tokens[1..];
+
+            // execute
             match execute_system_command(&command, &args) {
                 Ok(result) => println!("{}", result),
                 Err(err) => eprintln!("{:?}", err),
