@@ -3,13 +3,7 @@ mod config;
 use atty::Stream;
 use colored::Colorize;
 use shell_words;
-use std::{
-    env,
-    error::Error,
-    io::{self, Write},
-    path::Path,
-    process::Command,
-};
+use std::{env, error::Error, io, io::Write, path::Path, process::Command};
 use whoami::username;
 
 // TODO: documentation and cleanup
@@ -52,7 +46,6 @@ fn main() {
         // shell loop
         loop {
             // TODO: autocomplete
-
             // cwd
             let cwd = match env::current_dir() {
                 Ok(cwd) => cwd,
