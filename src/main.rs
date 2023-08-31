@@ -1,58 +1,57 @@
+mod config;
+
 use atty::Stream;
 use colored::Colorize;
-use dirs;
-use serde_derive::Deserialize;
 use shell_words;
 use std::{
     env,
     error::Error,
-    fs,
     io::{self, Write},
     path::Path,
     process::Command,
 };
 use whoami::username;
-#[derive(Deserialize)]
-struct Data {
-    config: Config,
-}
-#[derive(Deserialize)]
-struct Config {
-    prompt_msg: String,
-    prompt_msg_color: String,
-    prompt_symbol: String,
-    prompt_symbol_color: String,
-    prompt_username: String,
-    shell_name: String,
-    execute_time: String,
-    execute_time_color: String,
-    git_integration: String,
-    wd_color: String,
-}
 
 // TODO: documentation and cleanup
 fn main() {
     if atty::is(Stream::Stdout) {
-        let data = load_config();
+        let data = config::load_config();
         let prompt_msg = data.config.prompt_msg;
         let prompt_msg_color = data.config.prompt_msg_color;
         let prompt_symbol = data.config.prompt_symbol;
         let prompt_symbol_color = data.config.prompt_symbol_color;
-        let prompt_username = parse_bool_config(&data.config.prompt_username);
-        let shell_name = parse_bool_config(&data.config.shell_name);
-        let execute_time = parse_bool_config(&data.config.execute_time);
+        let prompt_username = config::parse_bool_config(&data.config.prompt_username);
+        let shell_name = config::parse_bool_config(&data.config.shell_name);
+        // TODO
+        let execute_time = config::parse_bool_config(&data.config.execute_time);
         let execute_time_color = data.config.execute_time_color;
-        let git_integration = parse_bool_config(&data.config.git_integration);
+        // TODO
+        let git_integration = config::parse_bool_config(&data.config.git_integration);
+        let git_integration_color = data.config.git_integration_color;
+        let mut git_branch: String = String::from("");
+        if git_integration {
+            // get current git branch
+            // git rev-parse --abbrev-ref HEAD
+            let output = Command::new("git")
+                .arg("rev-parse")
+                .arg("--abbrev-ref")
+                .arg("HEAD")
+                .output()
+                .expect("Failed to execute command");
+
+            if output.status.success() {
+                git_branch = String::from_utf8_lossy(&output.stdout).to_string()
+            }
+        }
         let wd_color = data.config.wd_color;
         loop {
-            // TODO: git integration
             // TODO: autocomplete
-            // TODO: display username true/false
             let wd = match env::current_dir() {
                 Ok(wd) => wd,
                 Err(_) => panic!("Cannot determine current directory"),
             };
-            println!("{}", wd.display().to_string().color(wd_color.as_str()));
+            print!("{}", wd.display().to_string().color(wd_color.as_str()));
+            println!(" {}", git_branch.color(git_integration_color.as_str()));
             let mut prompt: String = prompt_msg.clone();
             if !prompt_msg.is_empty() && shell_name {
                 prompt.push_str(" | ");
@@ -126,34 +125,5 @@ fn execute_system_command(command: &str, args: &[String]) -> Result<String, Box<
                 Ok(String::from_utf8_lossy(&output.stderr).to_string())
             }
         }
-    }
-}
-
-fn load_config() -> Data {
-    let home_dir = dirs::home_dir().expect("Failed to determine home directory");
-    let config_path = home_dir.join(".ksh.toml");
-    // TODO: update path to .ksh.toml in home_dir
-    let contents = match fs::read_to_string("./.ksh.toml") {
-        Ok(contents) => contents,
-        Err(err) => {
-            panic!("Unable to load .ksh.toml: {}", err)
-        }
-    };
-
-    let data: Data = match toml::from_str(&contents) {
-        Ok(config) => config,
-        Err(err) => {
-            panic!("Unable to read .ksh.toml: {}", err)
-        }
-    };
-
-    data
-}
-
-fn parse_bool_config(value: &str) -> bool {
-    match value {
-        "true" => true,
-        "false" => false,
-        _ => true,
     }
 }
