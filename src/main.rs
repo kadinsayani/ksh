@@ -7,6 +7,7 @@ use std::{env, error::Error, io, io::Write, path::Path, process::Command};
 use whoami::username;
 
 // TODO: documentation and cleanup
+// TODO: handle backspace
 fn main() {
     if atty::is(Stream::Stdout) {
         // init
