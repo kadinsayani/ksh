@@ -23,9 +23,8 @@ pub struct Config {
 
 pub fn load_config() -> Data {
     let home_dir = dirs::home_dir().expect("Failed to determine home directory");
-    let config_path = home_dir.join(".ksh.toml");
-    // TODO: update path to .kshrc in home_dir
-    let contents = match fs::read_to_string("./.kshrc") {
+    let config_path = home_dir.join(".kshrc");
+    let contents = match fs::read_to_string(config_path) {
         Ok(contents) => contents,
         Err(err) => {
             panic!("Unable to load .kshrc: {}", err)
